@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>go stockscraper</title>
+    <meta name="description" content="Stock Scraper">
+    <meta name="author" content="SitePoint">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://ahmadayubi.com/assets/favicon.jpg"/>
+    <style>
+      body {
+        background-color: #282a36;
+        color: #f8f8f2;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .loading{
+        text-align: center;
+      }
+      .ups {
+        color: #50fa7b;
+      }
+
+      .downs {
+        color: #ff5555;
+      }
+
+      .total {
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%);
+        background: #282a36;
+        outline: 2px solid #f1fa8c;
+      }
+
+      .total-button {
+        background-color: #282a36;
+        outline: 1px solid #f1fa8c;
+        color: #f8f8f2;
+        font-family: 'JetBrains Mono', monospace;
+        height: fit-content;
+        position: absolute;
+        right: 10px;
+        top: 25px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: normal;
+        align-items: normal;
+        align-content: normal;
+      }
+
+      .subreddit {
+        display: block;
+        flex-grow: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        align-self: auto;
+        margin: 10px;
+      }
+
+      table {
+        width: 100%;
+        border: 1px solid #f1fa8c;
+      }
+      tr {
+        margin: 2px;
+      }
+    </style>
+    <script>
+        var total, totalShown;
+        function getData() {
+            let container = document.querySelector("div.container");
+            fetch(window.location.href.split("?")[0]+"/json?limit={{.}}")
+                .then(response => response.json())
+                .then(data => {
+                  let i = 0;
+                  let body = document.querySelector("body");
+                  for(let subReddit of data){
+                    if (i >= data.length - 1){
+                        total = subReddit;
+                        continue;
+                    }
+                    i++;
+                    createTable(container, subReddit);
+                  }
+                  body.removeChild(document.querySelector("h2.loading"));
+                }).catch(_ => {
+                  let error = document.createElement("h2");
+                  error.innerHTML = "error";
+                  error.classList.add("loading");
+                  error.classList.add("downs");
+                  body.removeChild(document.querySelector("h2.loading"));
+                  body.appendChild(error);
+                });
+        }
+        function createTable(container, subReddit) {
+            let div = document.createElement("div");
+            div.classList.add("subreddit");
+            let table = document.createElement("table");
+            let nameRow = document.createElement("tr");
+            let nameHeader = document.createElement("th");
+            nameHeader.innerHTML = `${subReddit.name} - ${subReddit.sort}`;
+            nameHeader.setAttribute("colspan", "4");
+            nameRow.appendChild(nameHeader);
+            table.appendChild(nameRow);
+
+            let headers = document.createElement("tr");
+            headers.innerHTML = "<tr><th>Symbol</th><th>Mentions</th><th>Upvotes</th><th>Downvotes</th></tr>";
+            table.appendChild(headers);
+
+            for(let key in subReddit.tickers){
+                let value = subReddit.tickers[key];
+                let tickerRow = document.createElement("tr");
+                let ticker = document.createElement("td");
+                ticker.innerHTML = key;
+                let count = document.createElement("td");
+                count.innerHTML = value["count"];
+                let ups = document.createElement("td");
+                ups.innerHTML = value["ups"];
+                ups.classList.add("ups")
+                let downs = document.createElement("td");
+                downs.innerHTML = value["downs"];
+                downs.classList.add("downs")
+                tickerRow.appendChild(ticker);
+                tickerRow.appendChild(count);
+                tickerRow.appendChild(ups);
+                tickerRow.appendChild(downs);
+                table.appendChild(tickerRow);
+            }
+
+            div.appendChild(table);
+            container.appendChild(div);
+        }
+
+        function showTotal() {
+            let body = document.querySelector("body");
+            if (totalShown){
+                body.removeChild(document.querySelector("div.total"));
+                totalShown = false;
+            } else {
+                let div = document.createElement("div");
+                div.classList.add("total");
+                createTable(div, total);
+                body.appendChild(div);
+                totalShown = true;
+            }
+        }
+    </script>
+  </head>
+  <body onload="getData()">
+    <div style="display: flex;">
+      <h3 style="display: block" >concurrent stockscraper</h3>
+      <button class="total-button" onclick="showTotal()">show total</button>
+    </div>
+    <hr>
+    <h2 class="loading">loading...</h2>
+    <div class="container"></div>
+    <hr>
+    <footer>
+      <p style="text-align: center">currently scrapes r/pennystock r/wallstreetbets r/canadianinvester r/stockmarket r/stocks r/daytrading</p>
+    </footer>
+  </body>
+</html>
+
