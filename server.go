@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -17,7 +18,7 @@ func main(){
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/json", getJson)
 	log.Println("Running...")
-	if err := http.ListenAndServe(":3000", nil); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
 		log.Fatal(err)
 	}
 }
